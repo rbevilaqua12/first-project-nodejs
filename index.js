@@ -1,94 +1,65 @@
-const { request, response } = require ("express")
-const express = require('express')
-const uuid = require('uuid')
-const app = express()
-const port = 3000
-app.use(express.json())
+const express = require('express');
+const uuid = require('uuid');
+const port = 3001;
+const app = express();
+app.use(express.json());
+const cors = require('cors');
+app.use(cors())
 
-const orders = []
+const users = [];
 
-const checkUseID = (request, response, next) => {
-    const { id } = request.params
+const checkUserId = (request, response, next) => {
+    const { id } = request.params;
 
-    const index = orders.findIndex(order => order.id === id)
+    const index = users.findIndex(user => user.id === id);
+
     if (index < 0) {
-        return response.status(404).json({ message: "ID not found" })
-    }
-    request.orderIndex = index
-    request.orderID = id
-    
-    next() 
+        return response.status(404).json({ message: "User Not Found" });
+    };
 
-}
+    request.userIndex = index;
+    request.userId = id;
 
-const checkUrlMethod = (request, response, next) =>{
-    const url = request.url
-    const method = request.method
-
-    console.log(url)
-    console.log(method)
-    
     next()
-}
+};
 
-app.post('/order',checkUrlMethod, (request, response) => {
-    const { order, clientName, price } = request.body
-    const status = "Em preparação"
-    const newOrder = { id: uuid.v4(), order, clientName, price, status }
+app.get('/users', (request, response) => {
+    return response.json({ users });
+});
 
-    orders.push(newOrder)
+app.post('/users', (request, response) => {
 
-    return response.status(201).json(newOrder)
-})
+    const { name, age } = request.body;
+    const user = { id: uuid.v4(), name, age };
 
-app.get('/order',checkUrlMethod, (request, response) => {
+    users.push(user);
+    return response.status(201).json({ user });
+});
 
-    return response.json(orders)
-})
+app.put('/users/:id', checkUserId, (request, response) => {
 
-app.put('/order/:id', checkUseID,checkUrlMethod, (request, response) => {
-    const id = request.orderID
-    const index = request.orderIndex
-
-    const { order, clientName, price, status } = request.body
-    const updateOrder = { id, order, clientName, price, status }
-
-
-    orders[index] = updateOrder
-    return response.json(updateOrder)
-})
-
-app.delete('/order/:id', checkUseID,checkUrlMethod, (request, response) => {
-    const index = response.orderIndex
-
-    orders.splice(index, 1)
-
-    return response.status(204).json()
-})
-
-app.get('/order/:id',checkUseID,checkUrlMethod, (request, response) => {
-    const index = request.orderIndex
+    const { name, age } = request.body;
+    const index = request.userIndex;
+    const id = request.userId;
     
-    const showOrders = orders[index]
- 
-    return response.json(showOrders)
-})
+    const updatedUser = { id, name, age };
 
-app.patch('/order/:id',checkUseID,checkUrlMethod, (request, response) => {
-    const id = request.orderID
-    const index = request.orderIndex
-    const {status} = request.body
-  
-    orders[index].status = status
-   
-  
-    return response.json(orders[index])
-})
+    users[index] = updatedUser;
+
+    return response.json(updatedUser);
+});
+
+app.delete('/users/:id', checkUserId, (request, response) => {
+    const index = request.userIndex;
+    users.splice(index, 1);
+
+    return response.status(204).json();
+});
 
 
 
 
 
 app.listen(port, () => {
-    console.log('👨‍💻 Server started on port 3000')
-})
+    console.log(port )
+});
